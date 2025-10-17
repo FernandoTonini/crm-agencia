@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1760639689473,
+      "tag": "0000_complex_silverclaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1760639729674,
+      "tag": "0001_outstanding_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1760640371084,
+      "tag": "0002_opposite_ares",
+      "breakpoints": true
+    }
+  ]
+}

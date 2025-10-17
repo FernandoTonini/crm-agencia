@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: crm-agencia
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.20.0
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: VITE_APP_ID
+        sync: false
+      - key: OWNER_OPEN_ID
+        sync: false
+      - key: BUILT_IN_FORGE_API_KEY
+        sync: false
+      - key: OAUTH_SERVER_URL
+        value: https://api.manus.im
+      - key: VITE_OAUTH_PORTAL_URL
+        value: https://manus.im
+      - key: VITE_APP_TITLE
+        value: CRM A Agência
+      - key: VITE_APP_LOGO
+        value: https://via.placeholder.com/150
+      - key: OWNER_NAME
+        value: Admin
+
