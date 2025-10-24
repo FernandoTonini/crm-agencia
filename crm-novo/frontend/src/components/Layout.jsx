@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/AuthContext';
-import { LayoutDashboard, Users, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Package, LogOut } from 'lucide-react';
 
 export const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export const Layout = ({ children }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Leads', path: '/leads' },
     { icon: FileText, label: 'Contratos', path: '/contracts' },
+    { icon: Package, label: 'Serviços', path: '/services' },
   ];
 
   return (
