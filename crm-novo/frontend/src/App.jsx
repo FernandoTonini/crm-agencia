@@ -5,7 +5,7 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Leads } from './pages/Leads';
 import { Contracts } from './pages/Contracts';
-import Services from './pages/Services';
+import { Services } from './pages/Services';
 import { Loading } from './components/Loading';
 
 // Componente para rotas protegidas
