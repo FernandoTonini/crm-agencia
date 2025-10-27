@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
-import Card from '../components/Card';
-import Loading from '../components/Loading';
+import { Card } from '../components/Card';
+import { Loading } from '../components/Loading';
 import api from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const COLORS = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
 
-export default function Services() {
+export function Services() {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
