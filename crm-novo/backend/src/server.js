@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import leadsRoutes from './routes/leads.js';
 import contractsRoutes from './routes/contracts.js';
 import dashboardRoutes from './routes/dashboard.js';
+import { auditoryMiddleware } from './middleware/auditoryMiddleware.js';
 
 // Configurar variáveis de ambiente
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/contracts', contractsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use(auditoryMiddleware);
 
 // Rota 404
 app.use((req, res) => {
