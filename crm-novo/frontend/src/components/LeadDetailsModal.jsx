@@ -1,291 +1,314 @@
-import { X, Mail, Phone, Instagram, MapPin, Calendar, User, FileText, MessageSquare } from 'lucide-react';
-import { Card } from './Card';
+import { useState, useEffect } from 'react';
+import { X, Edit2, Trash2, Plus, Calendar, Mail, Phone, MapPin, Award, Tag } from 'lucide-react';
+import api from '../services/api';
 
-export const LeadDetailsModal = ({ lead, onClose, contracts = [] }) => {
-  if (!lead) return null;
+export const LeadDetailsModal = ({ isOpen, onClose, leadId, onSuccess }) => {
+  const [lead, setLead] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const getClassificationColor = (classification) => {
-    switch (classification) {
-      case 'Quente': return 'text-red-500';
-      case 'Morno': return 'text-yellow-500';
-      case 'Frio': return 'text-blue-500';
-      default: return 'text-gray-500';
+  useEffect(() => {
+    if (isOpen && leadId) {
+      loadLeadDetails();
+    }
+  }, [isOpen, leadId]);
+
+  const loadLeadDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/leads/${leadId}`);
+      setLead(response.data);
+      setFormData(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes do lead:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getClassificationIcon = (classification) => {
-    switch (classification) {
-      case 'Quente': return '🔥';
-      case 'Morno': return '⭐';
-      case 'Frio': return '💡';
-      default: return '📊';
+  const handleSave = async () => {
+    try {
+      await api.put(`/leads/${leadId}`, formData);
+      setLead(formData);
+      setIsEditing(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Erro ao salvar lead:', error);
     }
   };
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      'novo': 'Novo',
-      'contatado': 'Contatado',
-      'negociacao': 'Negociação',
-      'fechado': 'Fechado',
-      'perdido': 'Perdido',
-      'renovacao': 'Renovação'
-    };
-    return labels[status] || status;
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/leads/${leadId}`);
+      setShowDeleteConfirm(false);
+      onClose();
+      onSuccess?.();
+    } catch (error) {
+      console.error('Erro ao deletar lead:', error);
+    }
   };
 
-  // Perguntas do quiz
-  const quizQuestions = [
-    { key: 'question1', label: 'Pergunta 1' },
-    { key: 'question2', label: 'Pergunta 2' },
-    { key: 'question3', label: 'Pergunta 3' },
-    { key: 'question4', label: 'Pergunta 4' },
-    { key: 'question5', label: 'Pergunta 5' },
-    { key: 'question6', label: 'Pergunta 6' },
-    { key: 'question7', label: 'Pergunta 7' }
-  ];
-
-  const answeredQuestions = quizQuestions.filter(q => lead[q.key]);
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="glass-card max-w-4xl w-full my-8 relative animate-fade-in">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full glass-button flex items-center justify-center text-3xl">
-              {lead.name.charAt(0).toUpperCase()}
+        <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gold-400">Detalhes do Lead</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-400 mx-auto"></div>
+          </div>
+        ) : lead ? (
+          <div className="p-6 space-y-6">
+            {/* Informações Básicas */}
+            <section>
+              <h3 className="text-lg font-semibold text-gold-400 mb-4">Informações Básicas</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-400">Nome</label>
+                  <input
+                    type="text"
+                    value={formData.name || ''}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={!isEditing}
+                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400">Email</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Mail size={16} className="text-gray-500" />
+                    <input
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      disabled={!isEditing}
+                      className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400">Telefone</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Phone size={16} className="text-gray-500" />
+                    <input
+                      type="tel"
+                      value={formData.phone || ''}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      disabled={!isEditing}
+                      className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400">Instagram</label>
+                  <input
+                    type="text"
+                    value={formData.instagram || ''}
+                    onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                    disabled={!isEditing}
+                    className="w-full mt-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Localização */}
+            <section>
+              <h3 className="text-lg font-semibold text-gold-400 mb-4 flex items-center gap-2">
+                <MapPin size={20} />
+                Localização
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Cidade"
+                  value={formData.locationCity || ''}
+                  onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+                  disabled={!isEditing}
+                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  placeholder="Estado"
+                  value={formData.locationState || ''}
+                  onChange={(e) => setFormData({ ...formData, locationState: e.target.value })}
+                  disabled={!isEditing}
+                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  placeholder="País"
+                  value={formData.locationCountry || ''}
+                  onChange={(e) => setFormData({ ...formData, locationCountry: e.target.value })}
+                  disabled={!isEditing}
+                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+                />
+              </div>
+            </section>
+
+            {/* Classificação */}
+            <section>
+              <h3 className="text-lg font-semibold text-gold-400 mb-4 flex items-center gap-2">
+                <Award size={20} />
+                Classificação
+              </h3>
+              <select
+                value={formData.classification || ''}
+                onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
+                disabled={!isEditing}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white disabled:opacity-50"
+              >
+                <option value="">Selecione uma classificação</option>
+                <option value="Quente">🔥 Quente</option>
+                <option value="Morno">🌤️ Morno</option>
+                <option value="Frio">❄️ Frio</option>
+              </select>
+            </section>
+
+            {/* Serviços Contratados */}
+            {lead.services && lead.services.length > 0 && (
+              <section>
+                <h3 className="text-lg font-semibold text-gold-400 mb-4 flex items-center gap-2">
+                  <Tag size={20} />
+                  Serviços Contratados
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {lead.services.map((service, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 bg-gold-500/20 text-gold-400 rounded-full text-sm border border-gold-500/50"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Respostas do Quiz */}
+            <section>
+              <h3 className="text-lg font-semibold text-gold-400 mb-4">Respostas do Quiz</h3>
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5, 6, 7].map((num) => {
+                  const key = `question${num}`;
+                  const answer = formData[key];
+                  return (
+                    <div key={num} className="bg-gray-800 p-3 rounded">
+                      <p className="text-sm text-gray-400 mb-1">Pergunta {num}</p>
+                      <p className="text-white">{answer || 'Sem resposta'}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Auditoria */}
+            <section className="bg-gray-800 p-4 rounded">
+              <h3 className="text-lg font-semibold text-gold-400 mb-3">Auditoria</h3>
+              <div className="space-y-2 text-sm text-gray-400">
+                <p>
+                  <span className="text-white">Criado por:</span> {lead.createdBy || 'Desconhecido'}
+                </p>
+                <p>
+                  <span className="text-white">Data de criação:</span>{' '}
+                  {new Date(lead.createdAt).toLocaleString('pt-BR')}
+                </p>
+                {lead.lastModifiedBy && (
+                  <>
+                    <p>
+                      <span className="text-white">Modificado por:</span> {lead.lastModifiedBy}
+                    </p>
+                    <p>
+                      <span className="text-white">Última modificação:</span>{' '}
+                      {new Date(lead.updatedAt).toLocaleString('pt-BR')}
+                    </p>
+                  </>
+                )}
+              </div>
+            </section>
+
+            {/* Botões de Ação */}
+            <div className="flex gap-3 pt-4 border-t border-gray-700">
+              {!isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                  >
+                    <Edit2 size={18} />
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                  >
+                    <Trash2 size={18} />
+                    Deletar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setFormData(lead);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              )}
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">{lead.name}</h2>
-              <div className="flex items-center gap-3 mt-1">
-                <span className={`badge badge-${lead.classification.toLowerCase()} flex items-center gap-1`}>
-                  <span>{getClassificationIcon(lead.classification)}</span>
-                  <span>{lead.classification}</span>
-                </span>
-                <span className="text-sm text-gray-400">
-                  Score: <span className="text-gold font-semibold">{lead.score}</span>
-                </span>
+          </div>
+        ) : (
+          <div className="p-8 text-center text-gray-400">Lead não encontrado</div>
+        )}
+
+        {/* Modal de Confirmação de Deleção */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-bold text-white mb-4">Confirmar Deleção</h3>
+              <p className="text-gray-400 mb-6">
+                Tem certeza que deseja deletar este lead? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+                >
+                  Deletar
+                </button>
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-lg glass-button hover:bg-white/10 transition-colors flex items-center justify-center"
-          >
-            <X size={20} className="text-gray-400" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Informações de Contato */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <User size={20} className="text-gold" />
-              Informações de Contato
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <Mail size={16} className="text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-400">Email</p>
-                  <p className="text-white">{lead.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone size={16} className="text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-400">Telefone</p>
-                  <p className="text-white">{lead.phone}</p>
-                </div>
-              </div>
-              {lead.instagram && (
-                <div className="flex items-center gap-3">
-                  <Instagram size={16} className="text-gray-400" />
-                  <div>
-                    <p className="text-xs text-gray-400">Instagram</p>
-                    <p className="text-white">{lead.instagram}</p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <Calendar size={16} className="text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-400">Data de Cadastro</p>
-                  <p className="text-white">
-                    {new Date(lead.timestamp).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Status e Classificação */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Status</h3>
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Status Atual</p>
-                <span className="px-3 py-1 rounded-lg bg-white/5 text-white text-sm">
-                  {getStatusLabel(lead.status)}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Classificação</p>
-                <span className={`badge badge-${lead.classification.toLowerCase()}`}>
-                  {getClassificationIcon(lead.classification)} {lead.classification}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-1">Pontuação</p>
-                <span className="text-2xl font-bold text-gold">{lead.score}</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Perguntas e Respostas do Quiz */}
-          {answeredQuestions.length > 0 && (
-            <Card>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <MessageSquare size={20} className="text-gold" />
-                Respostas do Quiz ({answeredQuestions.length})
-              </h3>
-              <div className="space-y-4">
-                {answeredQuestions.map((q, index) => (
-                  <div key={q.key} className="p-4 rounded-lg bg-white/5 border border-white/10">
-                    <p className="text-sm text-gray-400 mb-2">
-                      {q.label}
-                    </p>
-                    <p className="text-white">{lead[q.key]}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Localização */}
-          {(lead.locationCity || lead.ipAddress) && (
-            <Card>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <MapPin size={20} className="text-gold" />
-                Localização
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {lead.ipAddress && (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Endereço IP</p>
-                    <p className="text-white">{lead.ipAddress}</p>
-                  </div>
-                )}
-                {lead.locationCity && (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Cidade</p>
-                    <p className="text-white">{lead.locationCity}</p>
-                  </div>
-                )}
-                {lead.locationState && (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Estado</p>
-                    <p className="text-white">{lead.locationState}</p>
-                  </div>
-                )}
-                {lead.locationCountry && (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">País</p>
-                    <p className="text-white">{lead.locationCountry}</p>
-                  </div>
-                )}
-                {(lead.locationLatitude && lead.locationLongitude) && (
-                  <div className="col-span-2">
-                    <p className="text-xs text-gray-400 mb-1">Coordenadas</p>
-                    <p className="text-white text-sm">
-                      {lead.locationLatitude}, {lead.locationLongitude}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-
-          {/* Observações */}
-          {lead.observations && (
-            <Card>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-gold" />
-                Observações
-              </h3>
-              <p className="text-gray-300 whitespace-pre-wrap">{lead.observations}</p>
-            </Card>
-          )}
-
-          {/* Contratos Vinculados */}
-          {contracts.length > 0 && (
-            <Card>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-gold" />
-                Contratos ({contracts.length})
-              </h3>
-              <div className="space-y-3">
-                {contracts.map((contract) => (
-                  <div key={contract.id} className="p-4 rounded-lg bg-white/5 border border-white/10">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-semibold">
-                        R$ {(contract.contractValue / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                      <span className={`px-2 py-1 rounded text-xs ${contract.isActive ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-500'}`}>
-                        {contract.isActive ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      Duração: {contract.contractDuration} meses
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Início: {new Date(contract.startDate).toLocaleDateString('pt-BR')}
-                    </p>
-                    {contract.notes && (
-                      <p className="text-sm text-gray-300 mt-2">{contract.notes}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Auditoria */}
-          <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Histórico</h3>
-            <div className="space-y-2 text-sm">
-              {lead.createdBy && (
-                <p className="text-gray-400">
-                  Adicionado por: <span className="text-white">{lead.createdBy}</span>
-                </p>
-              )}
-              {lead.lastModifiedBy && (
-                <p className="text-gray-400">
-                  Última modificação por: <span className="text-white">{lead.lastModifiedBy}</span>
-                </p>
-              )}
-              {lead.lastModifiedAt && (
-                <p className="text-gray-400">
-                  Modificado em: <span className="text-white">
-                    {new Date(lead.lastModifiedAt).toLocaleString('pt-BR')}
-                  </span>
-                </p>
-              )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-white/10 flex justify-end">
-          <button
-            onClick={onClose}
-            className="btn-secondary"
-          >
-            Fechar
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
